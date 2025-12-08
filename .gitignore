@@ -1,0 +1,42 @@
+# Build artifacts
+*.class
+*.jar
+*.war
+*.ear
+target/
+build/
+dist/
+out/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+.DS_Store
+
+# NiFi specific
+nifi-*/work/
+nifi-*/state/
+nifi-*/conf/flow.xml.gz
+nifi-*/logs/
+
+# Dependency directories
+node_modules/
+vendor/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+env/
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+.cache/
