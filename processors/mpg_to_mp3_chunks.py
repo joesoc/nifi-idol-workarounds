@@ -79,6 +79,7 @@ def handler(context, session, flowfile):
 
     # --- 3. Chunking configuration ---
     CHUNK_DURATION = 30.0  # seconds (optimal for most STT services)
+    MIN_CHUNK_SIZE = 1024  # bytes - minimum valid MP3 file size
     segment_index = 0
 
     while True:
@@ -111,16 +112,18 @@ def handler(context, session, flowfile):
 
             # --- Handle FFmpeg exit codes gracefully ---
             if result.returncode != 0:
-                if os.path.exists(temp_mp3_path) and os.path.getsize(temp_mp3_path) > 1024:
+                if os.path.exists(temp_mp3_path) and os.path.getsize(temp_mp3_path) > MIN_CHUNK_SIZE:
                     logInfo("FFmpeg exited non-zero but produced final segment → accepting.")
                 elif segment_index == 0:
-                    logError(f"FFmpeg failed on first segment: {result.stderr.decode()}")
-                    raise Exception("FFmpeg failed on first segment")
+                    stderr_output = result.stderr.decode() if result.stderr else "No error output"
+                    logError(f"FFmpeg failed on first segment. Command: {' '.join(ffmpeg_command)}")
+                    logError(f"FFmpeg error: {stderr_output}")
+                    raise Exception(f"FFmpeg failed on first segment: {stderr_output[:200]}")
                 else:
                     break  # End of file reached
 
             # --- Validate output file ---
-            if not os.path.exists(temp_mp3_path) or os.path.getsize(temp_mp3_path) < 1024:
+            if not os.path.exists(temp_mp3_path) or os.path.getsize(temp_mp3_path) < MIN_CHUNK_SIZE:
                 logWarn(f"Segment {segment_index} too small or missing → end of content.")
                 if os.path.exists(temp_mp3_path):
                     os.remove(temp_mp3_path)

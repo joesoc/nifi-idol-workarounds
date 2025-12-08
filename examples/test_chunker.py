@@ -167,8 +167,10 @@ def test_processor(mpg_path):
     print("-"*70 + "\n")
     
     # Import and run processor
-    # Note: In real test, we'd import from the actual module
-    # For this demo, we'll inline the processor logic
+    # Use sys.path to allow import from processors directory
+    import sys
+    import os
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
     
     from processors.mpg_to_mp3_chunks import handler
     

@@ -2,6 +2,8 @@
 
 This example shows how to integrate the MPG to MP3 chunker with OpenAI's Whisper API for speech-to-text.
 
+**Note**: This example uses the OpenAI API syntax that may need updates based on your OpenAI library version. For the latest API, see the [OpenAI Python library documentation](https://github.com/openai/openai-python).
+
 ## Prerequisites
 
 ```bash
