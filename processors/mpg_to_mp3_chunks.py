@@ -83,9 +83,10 @@ def handler(context, session, flowfile):
 
     while True:
         start_time = segment_index * CHUNK_DURATION
-        temp_mp3_path = getTempFile(prefix=f"segment-{segment_index:03d}", extn='.mp3')
+        temp_mp3_path = None  # Initialize to None for safe cleanup
 
         try:
+            temp_mp3_path = getTempFile(prefix=f"segment-{segment_index:03d}", extn='.mp3')
             logInfo(f"Extracting segment {segment_index} @ {start_time:.1f}s")
 
             # Fast-seek FFmpeg command (-ss BEFORE -i)
@@ -154,7 +155,7 @@ def handler(context, session, flowfile):
 
         except Exception as e:
             logError(f"Critical error in segment loop: {e}")
-            if os.path.exists(temp_mp3_path):
+            if temp_mp3_path and os.path.exists(temp_mp3_path):
                 os.remove(temp_mp3_path)
             return  # Fail fast — already-transferred chunks remain valid
 
