@@ -27,6 +27,7 @@ nifi-idol-workarounds/
 1. **Explore the Documentation**: Start with [Getting Started](docs/getting-started.md) to understand the basics
 2. **Review Examples**: Browse the [examples](examples/) directory for code samples and configurations
 3. **Find Solutions**: Check the [docs](docs/) directory for specific workaround documentation
+4. **Quick Reference**: See [QUICKREF.md](QUICKREF.md) for quick links and common tasks
 
 ## Documentation
 
