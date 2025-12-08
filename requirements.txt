@@ -1,0 +1,35 @@
+# Python Dependencies for NiFi IDOL Workarounds
+# =============================================
+#
+# This repository contains NiFi ExecuteScript processors written in Python.
+# These processors are executed within NiFi's Python environment.
+#
+# Core Requirements:
+# -----------------
+# - Python 3.6+ (typically bundled with NiFi)
+# - FFmpeg 4.0+ with libmp3lame (system dependency, not Python package)
+#
+# Optional Dependencies for Testing/Development:
+# ----------------------------------------------
+# These are NOT required for NiFi execution, but useful for local development
+
+# For testing the processor logic outside NiFi
+# pytest>=7.0.0
+# pytest-cov>=4.0.0
+
+# For code quality
+# pylint>=2.15.0
+# black>=22.0.0
+
+# STT Integration Examples (not required by processor itself):
+# openai>=0.27.0          # OpenAI Whisper API
+# google-cloud-speech>=2.0.0  # Google Cloud STT
+# azure-cognitiveservices-speech>=1.24.0  # Azure STT
+# deepgram-sdk>=2.0.0     # Deepgram STT
+
+# Note: The actual processor (mpg_to_mp3_chunks.py) has NO external Python dependencies.
+# It uses only Python standard library modules:
+# - os
+# - subprocess  
+# - sys
+# - tempfile
