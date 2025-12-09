@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-12-09
+
+### Changed
+
+#### Integration Stack
+- **Replaced Elasticsearch with Sarvam AI**: Updated all documentation and examples to use Sarvam AI for indexing and storage
+- **Replaced Google STT with Sarvam AI**: Migrated all speech-to-text examples to use Sarvam AI's STT API
+- **Updated Dependencies**: Replaced `google-cloud-speech` with `sarvam-ai` and `requests` in requirements.txt
+
+#### Documentation Updates
+- Updated README.md to reference Sarvam AI instead of Elasticsearch and Google STT
+- Updated docs/README.md flow diagrams to show Sarvam AI integration
+- Updated examples/nifi_configuration.md with Sarvam AI configuration
+- Updated examples/README.md with Sarvam AI patterns
+- Renamed whisper_integration.md to sarvam_ai_integration.md with complete rewrite
+- Updated all architecture diagrams to show PutSarvamAI instead of PutElasticsearch
+
+### Removed
+- Removed all references to OpenAI Whisper integration
+- Removed all references to Google Cloud STT
+- Removed all references to Azure Cognitive Services STT
+- Removed all references to Deepgram STT
+- Removed all references to Elasticsearch
+
 ## [1.0.0] - 2025-12-08
 
 ### Added
@@ -23,10 +47,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Solution architecture and data flow
   - Installation and prerequisites
   - NiFi configuration guide
-  - Usage examples for multiple STT engines
+  - Usage examples for STT engines
   - Timing metadata and video synchronization
   - Troubleshooting and performance tuning
-  - Integration patterns for OpenAI Whisper, Google STT, Azure STT, Deepgram
+  - Integration patterns for STT services
 
 #### Examples
 - **Configuration Guide** (`examples/nifi_configuration.md`): Step-by-step NiFi setup
@@ -37,7 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Performance tuning guidelines
   - Troubleshooting checklist
 
-- **Whisper Integration** (`examples/whisper_integration.md`): OpenAI Whisper example
+- **STT Integration** (`examples/sarvam_ai_integration.md`): Sarvam AI example
   - Complete ExecuteScript processor for Whisper STT
   - JSON output format
   - Transcript merging strategies

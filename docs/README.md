@@ -16,7 +16,7 @@ This document presents a **production-proven workaround** implemented as an **Ex
 - Splits audio into **precise 30-second chunks**
 - Preserves **exact timing metadata** (`audio.chunk.start`, `audio.chunk.duration`)
 - Enables **frame-accurate click-to-playback** in the original video from transcript results
-- Works with **any downstream STT engine** (OpenAI Whisper, Google, Azure, Deepgram, Whisper.cpp, etc.)
+- Works with **Sarvam AI STT engine** for multi-language support
 
 Result: **100% speech-to-text coverage** across all languages and all container formats with perfect video synchronization.
 
@@ -117,12 +117,11 @@ Instead of passing video content through NiFi's FlowFile streaming API (which ma
 │    - audio.chunk.duration: 30.0                 │
 └────────┬─────────────────────────────────────────┘
          │
-         ├─────────────┬─────────────┬──────────────
-         │             │             │
-┌────────▼────┐ ┌─────▼─────┐ ┌────▼──────┐
-│  Whisper    │ │  Google   │ │  Azure    │
-│  STT        │ │  STT      │ │  STT      │
-└─────────────┘ └───────────┘ └───────────┘
+         │
+         │
+┌────────▼────────┐
+│  Sarvam AI STT  │
+└─────────────────┘
 ```
 
 ### Component Responsibilities
@@ -256,24 +255,32 @@ audio.chunk.start: 60.0
 audio.chunk.duration: 30.0
 ```
 
-### Example 2: Integration with OpenAI Whisper
+### Example 2: Integration with Sarvam AI
 
 ```python
 # Downstream InvokeHTTP or ExecuteScript processor
-import openai
+import requests
 
 chunk_file = session.read(flowfile)
 start_time = float(flowfile.getAttribute('audio.chunk.start'))
 
-transcript = openai.Audio.transcribe(
-    model="whisper-1",
-    file=chunk_file,
-    language="en"  # or auto-detect
+# Call Sarvam AI API
+headers = {'Authorization': f'Bearer {SARVAM_API_KEY}'}
+files = {'file': chunk_file}
+data = {'model': 'saarika:v1', 'language_code': 'auto'}
+
+response = requests.post(
+    'https://api.sarvam.ai/speech-to-text',
+    headers=headers,
+    files=files,
+    data=data
 )
+
+result = response.json()
 
 # Add timing to transcript
 transcript_with_timing = {
-    "text": transcript.text,
+    "text": result.get('transcript'),
     "start_offset": start_time,
     "original_video": flowfile.getAttribute('original.link')
 }
@@ -291,14 +298,12 @@ ExecuteScript (mpg_to_mp3_chunks.py)
 UpdateAttribute (add STT endpoint routing)
   ↓
 RouteOnAttribute (distribute by language/service)
-  ↓ ↓ ↓
-  │ │ └─→ InvokeHTTP (Azure STT)
-  │ └───→ InvokeHTTP (Google STT)
-  └─────→ InvokeHTTP (Whisper API)
+  ↓
+  └─────→ InvokeHTTP (Sarvam AI STT)
   ↓
 MergeContent (reassemble transcripts by original.link)
   ↓
-PutFile / PutElasticsearch / PutIDOL
+PutFile / PutSarvamAI / PutIDOL
 ```
 
 ---
@@ -418,76 +423,51 @@ Per concurrent task:
 
 ---
 
-## Integration with STT Engines
+## Integration with Sarvam AI STT
 
-### OpenAI Whisper
+### Sarvam AI Speech-to-Text
 
 ```python
-import openai
+import requests
+
+SARVAM_API_KEY = os.environ.get('SARVAM_API_KEY')
+SARVAM_API_URL = "https://api.sarvam.ai/speech-to-text"
 
 with open(chunk_path, 'rb') as audio_file:
-    transcript = openai.Audio.transcribe(
-        model="whisper-1",
-        file=audio_file,
-        response_format="verbose_json"  # includes timing
+    headers = {'Authorization': f'Bearer {SARVAM_API_KEY}'}
+    files = {'file': audio_file}
+    data = {
+        'model': 'saarika:v1',
+        'language_code': 'auto'  # Auto-detect or specify: hi-IN, en-IN, etc.
+    }
+    
+    response = requests.post(
+        SARVAM_API_URL,
+        headers=headers,
+        files=files,
+        data=data
     )
+    
+    result = response.json()
+    transcript = result.get('transcript', '')
+    language = result.get('language_code', 'unknown')
 ```
 
-### Google Cloud Speech-to-Text
+### Supported Languages
 
-```python
-from google.cloud import speech
+Sarvam AI supports multiple Indian languages:
+- English (en-IN)
+- Hindi (hi-IN)
+- Tamil (ta-IN)
+- Telugu (te-IN)
+- Kannada (kn-IN)
+- Malayalam (ml-IN)
+- Marathi (mr-IN)
+- Gujarati (gu-IN)
+- Bengali (bn-IN)
+- Punjabi (pa-IN)
 
-client = speech.SpeechClient()
-
-with open(chunk_path, 'rb') as audio_file:
-    content = audio_file.read()
-
-audio = speech.RecognitionAudio(content=content)
-config = speech.RecognitionConfig(
-    encoding=speech.RecognitionConfig.AudioEncoding.MP3,
-    sample_rate_hertz=44100,
-    language_code="en-US",
-    enable_word_time_offsets=True
-)
-
-response = client.recognize(config=config, audio=audio)
-```
-
-### Azure Cognitive Services
-
-```python
-import azure.cognitiveservices.speech as speechsdk
-
-speech_config = speechsdk.SpeechConfig(
-    subscription="YOUR_KEY",
-    region="eastus"
-)
-
-audio_config = speechsdk.AudioConfig(filename=chunk_path)
-recognizer = speechsdk.SpeechRecognizer(
-    speech_config=speech_config,
-    audio_config=audio_config
-)
-
-result = recognizer.recognize_once()
-```
-
-### Deepgram
-
-```bash
-curl --request POST \
-  --url https://api.deepgram.com/v1/listen \
-  --header "Authorization: Token YOUR_API_KEY" \
-  --header "Content-Type: audio/mp3" \
-  --data-binary "@chunk_000.mp3"
-```
-
-### Local Whisper.cpp
-
-```bash
-./whisper.cpp/main -m models/ggml-base.en.bin -f chunk_000.mp3 -otxt
-```
+Use `language_code: 'auto'` for automatic language detection.
 
 ---
 

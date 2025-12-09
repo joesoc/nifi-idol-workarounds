@@ -1,14 +1,14 @@
-# OpenAI Whisper Integration Example
+# Sarvam AI Integration Example
 
-This example shows how to integrate the MPG to MP3 chunker with OpenAI's Whisper API for speech-to-text.
+This example shows how to integrate the MPG to MP3 chunker with Sarvam AI's Speech-to-Text API.
 
-**Note**: This example uses the OpenAI API syntax that may need updates based on your OpenAI library version. For the latest API, see the [OpenAI Python library documentation](https://github.com/openai/openai-python).
+**Note**: For the latest API documentation, see the [Sarvam AI API documentation](https://docs.sarvam.ai/).
 
 ## Prerequisites
 
 ```bash
-pip install openai
-export OPENAI_API_KEY="your-api-key-here"
+pip install sarvam-ai
+export SARVAM_API_KEY="your-api-key-here"
 ```
 
 ## NiFi Flow Configuration
@@ -20,27 +20,28 @@ UpdateAttribute (set idol.reference)
   ↓
 ExecuteScript (mpg_to_mp3_chunks.py)
   ↓
-ExecuteScript (whisper_transcribe.py) ← This example
+ExecuteScript (sarvam_ai_transcribe.py) ← This example
   ↓
 MergeContent (by original.link)
   ↓
-PutElasticsearch / PutIDOL
+PutSarvamAI / PutIDOL
 ```
 
-## Whisper Transcription Processor
+## Sarvam AI Transcription Processor
 
 Create a new ExecuteScript processor with this code:
 
 ```python
 """
-OpenAI Whisper Speech-to-Text Processor
-Transcribes MP3 chunks using OpenAI Whisper API
+Sarvam AI Speech-to-Text Processor
+Transcribes MP3 chunks using Sarvam AI STT API
 """
 
 import json
 import os
 import tempfile
 import sys
+import requests
 
 # NiFi imports
 try:
@@ -53,15 +54,12 @@ except ImportError:
     def getTempFile(prefix='', extn='.tmp'):
         return tempfile.NamedTemporaryFile(prefix=prefix, suffix=extn, delete=False).name
 
-# OpenAI API
-try:
-    import openai
-    openai.api_key = os.environ.get('OPENAI_API_KEY')
-except ImportError:
-    logError("openai package not installed. Run: pip install openai")
+# Sarvam AI API configuration
+SARVAM_API_KEY = os.environ.get('SARVAM_API_KEY')
+SARVAM_API_URL = "https://api.sarvam.ai/speech-to-text"
 
 def handler(context, session, flowfile):
-    """Transcribe MP3 chunk using Whisper API"""
+    """Transcribe MP3 chunk using Sarvam AI API"""
     
     if flowfile is None:
         logError("Input FlowFile is None")
@@ -76,7 +74,7 @@ def handler(context, session, flowfile):
     logInfo(f"Transcribing chunk: {filename} (start: {chunk_start}s)")
     
     # Write FlowFile content to temp file
-    temp_audio = getTempFile(prefix='whisper-', extn='.mp3')
+    temp_audio = getTempFile(prefix='sarvam-', extn='.mp3')
     
     try:
         # Extract audio data from FlowFile
@@ -86,18 +84,34 @@ def handler(context, session, flowfile):
         
         session.read(flowfile, read_callback)
         
-        # Call Whisper API
+        # Call Sarvam AI API
+        headers = {
+            'Authorization': f'Bearer {SARVAM_API_KEY}'
+        }
+        
         with open(temp_audio, 'rb') as audio_file:
-            transcript_response = openai.Audio.transcribe(
-                model="whisper-1",
-                file=audio_file,
-                response_format="verbose_json",  # Include timing info
-                language=None  # Auto-detect (or set to 'en', 'es', etc.)
+            files = {'file': audio_file}
+            data = {
+                'model': 'saarika:v1',
+                'language_code': 'auto'  # Auto-detect language
+            }
+            
+            response = requests.post(
+                SARVAM_API_URL,
+                headers=headers,
+                files=files,
+                data=data
             )
         
-        # Extract transcript text
-        transcript_text = transcript_response.get('text', '').strip()
-        language = transcript_response.get('language', 'unknown')
+        if response.status_code != 200:
+            logError(f"Sarvam AI API error: {response.status_code} - {response.text}")
+            session.transfer(flowfile, 'failure')
+            return
+        
+        # Extract transcript from response
+        result = response.json()
+        transcript_text = result.get('transcript', '').strip()
+        language = result.get('language_code', 'unknown')
         
         if not transcript_text:
             logInfo(f"No speech detected in chunk {filename}")
@@ -111,7 +125,7 @@ def handler(context, session, flowfile):
         flowfile = session.putAttribute(flowfile, 'transcript.language', language)
         flowfile = session.putAttribute(flowfile, 'transcript.start', str(chunk_start))
         flowfile = session.putAttribute(flowfile, 'transcript.end', str(chunk_start + chunk_duration))
-        flowfile = session.putAttribute(flowfile, 'transcript.source', 'whisper-1')
+        flowfile = session.putAttribute(flowfile, 'transcript.source', 'sarvam-ai')
         
         # Create JSON output
         transcript_json = {
@@ -122,7 +136,7 @@ def handler(context, session, flowfile):
             'duration': chunk_duration,
             'original_video': original_link,
             'chunk_file': filename,
-            'model': 'whisper-1'
+            'model': 'saarika:v1'
         }
         
         # Write JSON to FlowFile content
@@ -160,7 +174,7 @@ Each transcribed chunk produces JSON:
   "duration": 30.0,
   "original_video": "/data/videos/meeting.mpg",
   "chunk_file": "meeting_chunk_001.mp3",
-  "model": "whisper-1"
+  "model": "saarika:v1"
 }
 ```
 
@@ -187,7 +201,7 @@ Use MergeContent processor to combine chunks:
     "duration": 30.0,
     "original_video": "/data/videos/meeting.mpg",
     "chunk_file": "meeting_chunk_000.mp3",
-    "model": "whisper-1"
+    "model": "saarika:v1"
   },
   {
     "text": "Today we will discuss quarterly results",
@@ -197,7 +211,7 @@ Use MergeContent processor to combine chunks:
     "duration": 30.0,
     "original_video": "/data/videos/meeting.mpg",
     "chunk_file": "meeting_chunk_001.mp3",
-    "model": "whisper-1"
+    "model": "saarika:v1"
   }
 ]
 ```
@@ -251,32 +265,29 @@ Create search results with video links:
 </div>
 ```
 
-## Advanced: Word-Level Timestamps
+## Multi-Language Support
 
-For word-level timestamps, parse Whisper's detailed response:
+Sarvam AI supports multiple Indian languages and auto-detection:
 
 ```python
-# In transcription processor
-transcript_response = openai.Audio.transcribe(
-    model="whisper-1",
-    file=audio_file,
-    response_format="verbose_json",
-    timestamp_granularities=["word"]
-)
+# Specify language explicitly
+data = {
+    'model': 'saarika:v1',
+    'language_code': 'hi-IN'  # Hindi
+}
 
-# Extract word-level timing
-words = []
-for segment in transcript_response.get('segments', []):
-    for word_info in segment.get('words', []):
-        words.append({
-            'word': word_info['word'],
-            'start': chunk_start + word_info['start'],
-            'end': chunk_start + word_info['end'],
-            'confidence': word_info.get('confidence', 1.0)
-        })
-
-# Store in FlowFile
-flowfile = session.putAttribute(flowfile, 'words_json', json.dumps(words))
+# Supported languages:
+# - en-IN (English - Indian)
+# - hi-IN (Hindi)
+# - ta-IN (Tamil)
+# - te-IN (Telugu)
+# - kn-IN (Kannada)
+# - ml-IN (Malayalam)
+# - mr-IN (Marathi)
+# - gu-IN (Gujarati)
+# - bn-IN (Bengali)
+# - pa-IN (Punjabi)
+# - auto (Auto-detect)
 ```
 
 ## Error Handling
@@ -285,13 +296,18 @@ Handle API errors gracefully:
 
 ```python
 try:
-    transcript_response = openai.Audio.transcribe(...)
-except openai.error.InvalidRequestError as e:
-    logError(f"Invalid audio file: {e}")
-    session.transfer(flowfile, 'failure')
-except openai.error.RateLimitError as e:
-    logWarn(f"Rate limit hit: {e}")
-    session.transfer(flowfile, 'retry')  # Retry later
+    response = requests.post(SARVAM_API_URL, ...)
+    response.raise_for_status()
+except requests.exceptions.HTTPError as e:
+    if e.response.status_code == 400:
+        logError(f"Invalid audio file: {e}")
+        session.transfer(flowfile, 'failure')
+    elif e.response.status_code == 429:
+        logWarn(f"Rate limit hit: {e}")
+        session.transfer(flowfile, 'retry')  # Retry later
+    else:
+        logError(f"API error: {e}")
+        session.transfer(flowfile, 'failure')
 except Exception as e:
     logError(f"Unexpected error: {e}")
     session.transfer(flowfile, 'failure')
@@ -299,15 +315,15 @@ except Exception as e:
 
 ## Cost Estimation
 
-OpenAI Whisper pricing (as of 2024):
-- $0.006 per minute of audio
-- 30-second chunk = $0.003 per chunk
-- 1-hour video = 120 chunks = $0.36
+Sarvam AI pricing (check current rates):
+- Competitive pricing for Indian language STT
+- 30-second chunk processing
+- 1-hour video = 120 chunks
 
 For high-volume processing, consider:
-- Local Whisper.cpp (free, GPU-accelerated)
-- Azure Batch Speech API (lower cost)
-- Google Cloud STT (free tier available)
+- Batch processing optimizations
+- Caching strategies for repeated content
+- Load balancing across multiple API keys
 
 ## Testing
 
@@ -320,16 +336,15 @@ curl -F "file=@test.mpg" http://nifi:8080/nifi-api/...
 # 2. Verify chunks created
 ls -lh *_chunk_*.mp3
 
-# 3. Manually test Whisper
-python test_whisper.py chunk_000.mp3
+# 3. Manually test Sarvam AI
+python test_sarvam_ai.py chunk_000.mp3
 
 # 4. Check NiFi logs
-tail -f /opt/nifi/logs/nifi-app.log | grep -i whisper
+tail -f /opt/nifi/logs/nifi-app.log | grep -i sarvam
 ```
 
 ## See Also
 
-- [Google Cloud STT Example](google_stt_integration.md)
-- [Azure Cognitive Services Example](azure_stt_integration.md)
-- [Local Whisper.cpp Example](whisper_cpp_integration.md)
 - [Main Documentation](../docs/README.md)
+- [NiFi Configuration Guide](nifi_configuration.md)
+- [Sarvam AI API Documentation](https://docs.sarvam.ai/)

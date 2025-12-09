@@ -57,7 +57,7 @@ Enhancement suggestions are welcome! When suggesting an enhancement:
 We welcome code contributions! Areas where contributions are especially valuable:
 
 1. **New processors** for other IDOL/KeyView limitations
-2. **STT engine integrations** (Google, Azure, Deepgram, etc.)
+2. **Enhancements to Sarvam AI integration**
 3. **Performance optimizations**
 4. **Bug fixes**
 5. **Documentation improvements**
@@ -310,7 +310,7 @@ Fixes #123
 Examples:
 - `Add processor: Text encoding converter`
 - `Fix: Resource leak in error handling`
-- `Docs: Update Whisper integration example`
+- `Docs: Update Sarvam AI integration example`
 - `Perf: Optimize FFmpeg command for faster extraction`
 
 ### Creating Pull Request

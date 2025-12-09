@@ -76,7 +76,7 @@ Value: ${filename}
        ├─ success ──┐
        │            │
 ┌──────▼────────┐   │
-│ InvokeHTTP    │   │ - Call Whisper/Google/Azure STT API
+│ InvokeHTTP    │   │ - Call Sarvam AI STT API
 │ (STT Service) │   │
 └──────┬────────┘   │
        │            │
@@ -90,8 +90,8 @@ Value: ${filename}
 └──────┬───────────────┘
        │
 ┌──────▼───────────┐
-│  PutElastic-     │ - Index with IDOL or Elasticsearch
-│  search/PutIDOL  │
+│  PutSarvamAI/    │ - Index with IDOL or Sarvam AI
+│  PutIDOL         │
 └──────────────────┘
 ```
 
@@ -237,8 +237,4 @@ Back Pressure Object Threshold: 10000
 ## Integration Examples
 
 See `/examples/` directory for:
-- OpenAI Whisper integration
-- Google Cloud STT integration
-- Azure Cognitive Services integration
-- Deepgram API integration
-- Local Whisper.cpp integration
+- Sarvam AI STT integration

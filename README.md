@@ -28,7 +28,7 @@ This repository provides **production-proven workarounds** implemented as Apache
   - Bypasses FlowFile streaming issues
   - Extracts high-quality MP3 audio using FFmpeg
   - Splits into 30-second chunks with timing metadata
-  - Enables integration with any STT engine (Whisper, Google, Azure, Deepgram, etc.)
+  - Enables integration with Sarvam AI STT engine
 
 ### Documentation
 
@@ -73,7 +73,7 @@ brew install ffmpeg          # macOS
    ```
 
 4. **Connect to STT service**:
-   - Route `success` → InvokeHTTP (Whisper/Google/Azure API)
+   - Route `success` → InvokeHTTP (Sarvam AI STT API)
    - Extract transcripts and reassemble with timing metadata
 
 See [documentation](docs/README.md) for detailed setup instructions.
@@ -85,7 +85,7 @@ See [documentation](docs/README.md) for detailed setup instructions.
 | Problem | IDOL Limitation | Workaround Solution |
 |---------|----------------|---------------------|
 | Legacy surveillance footage (MPEG-1/2) | Media Server rejects format | Direct FFmpeg extraction + STT |
-| International broadcasts (40+ languages) | Limited STT language support | Cloud STT APIs (Whisper/Google/Azure) |
+| International broadcasts (40+ languages) | Limited STT language support | Sarvam AI STT with multi-language support |
 | Long-form video (hours) | Timeout/memory issues | 30-second chunking + parallel processing |
 | Click-to-playback from search | No precise timestamps | Preserved timing metadata |
 | Mixed codec archives | Codec compatibility issues | Universal audio extraction |
@@ -118,13 +118,13 @@ Organizations using these workarounds have achieved:
          └─ chunk_002.mp3 (60-90s)
          │
 ┌────────▼─────────────────┐
-│  STT Engine (Any)        │
-│  Whisper/Google/Azure    │
+│  STT Engine              │
+│  Sarvam AI               │
 └────────┬─────────────────┘
          │
 ┌────────▼─────────────────┐
 │  Timed Transcripts       │
-│  → IDOL/Elasticsearch    │
+│  → IDOL/Sarvam AI        │
 └──────────────────────────┘
 ```
 

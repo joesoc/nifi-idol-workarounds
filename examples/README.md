@@ -15,12 +15,13 @@ This directory contains examples and guides for using the NiFi IDOL workarounds.
 
 ### Integration Examples
 
-- **[whisper_integration.md](whisper_integration.md)**: OpenAI Whisper API integration
-  - Complete ExecuteScript processor for Whisper STT
+- **[sarvam_ai_integration.md](sarvam_ai_integration.md)**: Sarvam AI STT API integration
+  - Complete ExecuteScript processor for Sarvam AI STT
   - JSON output format
   - Merging transcript chunks
   - IDOL indexing examples
   - Click-to-playback implementation
+  - Multi-language support for Indian languages
   - Cost estimation
 
 ### Testing
@@ -55,11 +56,7 @@ python examples/test_chunker.py /path/to/test.mpg
 
 Choose your speech-to-text provider:
 
-- **OpenAI Whisper**: See [whisper_integration.md](whisper_integration.md)
-- **Google Cloud STT**: (Coming soon)
-- **Azure Cognitive Services**: (Coming soon)
-- **Deepgram**: (Coming soon)
-- **Local Whisper.cpp**: (Coming soon)
+- **Sarvam AI**: Complete STT integration with multi-language support
 
 ## Common Patterns
 
@@ -72,13 +69,13 @@ UpdateAttribute (set idol.reference)
   ↓
 ExecuteScript (mpg_to_mp3_chunks.py)
   ↓
-InvokeHTTP (Whisper API)
+InvokeHTTP (Sarvam AI STT API)
   ↓
 EvaluateJsonPath (extract text)
   ↓
 MergeContent (by original.link)
   ↓
-PutElasticsearch
+PutSarvamAI
 ```
 
 ### Pattern 2: Multi-Language Processing
@@ -91,10 +88,8 @@ UpdateAttribute (set idol.reference, language_code)
 ExecuteScript (mpg_to_mp3_chunks.py)
   ↓
 RouteOnAttribute (by language_code)
-  ↓ ↓ ↓
-  │ │ └─→ InvokeHTTP (Azure STT - Japanese)
-  │ └───→ InvokeHTTP (Google STT - Spanish)
-  └─────→ InvokeHTTP (Whisper - English)
+  ↓
+  └─────→ InvokeHTTP (Sarvam AI STT)
   ↓
 MergeContent
   ↓
@@ -187,7 +182,7 @@ Have a useful example or integration? Please contribute:
 Examples we'd love to see:
 - Additional STT service integrations
 - Video player implementations
-- IDOL/Elasticsearch indexing pipelines
+- IDOL/Sarvam AI indexing pipelines
 - Error handling patterns
 - Monitoring/alerting setups
 
