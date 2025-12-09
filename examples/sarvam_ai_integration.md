@@ -2,7 +2,7 @@
 
 This example shows how to integrate the MPG to MP3 chunker with Sarvam AI's Speech-to-Text API.
 
-**Note**: For the latest API documentation, see the [Sarvam AI API documentation](https://docs.sarvam.ai/).
+**Important**: This is a reference implementation. Please verify the exact API endpoints, authentication methods, and parameters against the official [Sarvam AI API documentation](https://docs.sarvam.ai/) as they may change.
 
 ## Prerequisites
 
@@ -55,8 +55,9 @@ except ImportError:
         return tempfile.NamedTemporaryFile(prefix=prefix, suffix=extn, delete=False).name
 
 # Sarvam AI API configuration
+# Note: Verify the actual API endpoint URL from official Sarvam AI documentation
 SARVAM_API_KEY = os.environ.get('SARVAM_API_KEY')
-SARVAM_API_URL = "https://api.sarvam.ai/speech-to-text"
+SARVAM_API_URL = "https://api.sarvam.ai/speech-to-text"  # Placeholder - verify with docs
 
 def handler(context, session, flowfile):
     """Transcribe MP3 chunk using Sarvam AI API"""
